@@ -12,6 +12,7 @@ package hbc
 char *get_codepoint_from_glyph_info(hb_font_t *,hb_glyph_info_t *, int);
 hb_glyph_info_t *get_glyph_info_at(hb_glyph_info_t *, int);
 hb_glyph_position_t *get_glyph_position_at(hb_glyph_position_t *, int);
+void hb_buffer_reset (hb_buffer_t *buffer);
 */
 import "C"
 import (
@@ -51,6 +52,21 @@ Get the glyph and position information.
 TODO: make the HB buffer behave as a good GC citizen.
 */
 
+// HBBuffer is the central data structure when interacting with Harfbuzz
+type HBBuffer struct {
+	hbbuf uintptr
+}
+
+func AllocHBBuffer() *HBBuffer {
+	return &HBBuffer{
+		hbbuf: allocHBBuffer(),
+	}
+}
+
+func (buf *HBBuffer) Reset() {
+	resetHBBuffer(buf.hbbuf)
+}
+
 // Allocate the central Harfbuzz data structure and return a (hidden)
 // pointer to it.
 func allocHBBuffer() uintptr {
@@ -61,6 +77,11 @@ func allocHBBuffer() uintptr {
 func freeHBBuffer(buf uintptr) {
 	hbbuf := (*C.struct_hb_buffer_t)(unsafe.Pointer(buf))
 	C.hb_buffer_destroy(hbbuf)
+}
+
+func resetHBBuffer(buf uintptr) {
+	hbbuf := (*C.struct_hb_buffer_t)(unsafe.Pointer(buf))
+	C.hb_buffer_reset(hbbuf)
 }
 
 // Helper: convert a Textdirection enum into a flag suited for Harfbuzz
@@ -90,7 +111,6 @@ func setHBBufferScript(hbbuf uintptr, script uint32) {
 	C.hb_buffer_set_script(ptr, C.hb_script_t(script))
 }
 
-// This is Harfbuzz's main function: share a piece of text, using
 // a given font. The result of a call to this function will be
 // attached to the buffer and may be received by a successive call
 // to 'getHBGlyphInfo()'.

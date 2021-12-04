@@ -26,6 +26,8 @@ func TestShapeSimple(t *testing.T) {
 	t.Logf("# of glyphs = %d", len(buf.Info))
 }
 
+// --- Benchmarking ----------------------------------------------------------
+
 var buf *hb.Buffer
 
 func BenchmarkHBShape(b *testing.B) {
@@ -36,7 +38,7 @@ func BenchmarkHBShape(b *testing.B) {
 		b.Fatalf("cannot prepare font %q", fontname)
 	}
 	for i := 0; i < b.N; i++ {
-		for _, line := range harfbuzzgoperf.Corpus {
+		for _, line := range harfbuzzgoperf.CorpusRunes {
 			buf, err = Shape(line, nil, params)
 			if err != nil {
 				b.Fatal("expected shaping output to be non-nil")

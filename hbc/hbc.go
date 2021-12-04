@@ -49,9 +49,15 @@ func Script4HB(s language.Script) uint32 {
 
 // NewHarfbuzz creates a new Harfbuzz text shaper, fully initialized.
 // Defaults are for Latin script, left-to-right.
-func NewHarfbuzz() *Harfbuzz {
+func NewHarfbuzz(buf *HBBuffer) *Harfbuzz {
 	hb := &Harfbuzz{}
-	hb.buffer = allocHBBuffer()
+	if buf == nil {
+		buf = AllocHBBuffer()
+		//hb.buffer = allocHBBuffer()
+	} else {
+		buf.Reset()
+	}
+	hb.buffer = buf.hbbuf
 	hb.direction = LeftToRight
 	setHBBufferDirection(hb.buffer, hb.direction)
 	hb.script = language.MustParseScript("Latn")
@@ -105,6 +111,9 @@ func (hb *Harfbuzz) SetLanguage(string) {
 func (hb *Harfbuzz) Shape(text string, hbfont uintptr) *HBGlyphSequence {
 	if hbfont == 0 {
 		panic("cannot find Harfbuzz font")
+	}
+	if hb.buffer == 0 {
+		panic("no Harfbuzz buffer supplied")
 	}
 	harfbuzzShape(hb.buffer, text, hbfont)
 	seq := getHBGlyphInfo(hb.buffer)
